@@ -69,13 +69,13 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
             <button
               type="button"
               onClick={() => setStatus('checked')}
-              className={`p-2 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              className={`p-2.5 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer min-h-[44px] ${
                 status === 'checked'
                   ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                   : 'border-slate-200 hover:bg-slate-50 text-slate-700'
               }`}
             >
-              <div className="w-4 h-4 rounded-xs border-2 border-emerald-600 bg-white flex items-center justify-center text-emerald-700">
+              <div className="w-4 h-4 rounded-xs border-2 border-emerald-600 bg-white flex items-center justify-center text-emerald-700 shrink-0">
                 <Check className="w-3 h-3 stroke-[3]" />
               </div>
               <span>Sudah Lapor</span>
@@ -84,26 +84,26 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
             <button
               type="button"
               onClick={() => setStatus('unchecked')}
-              className={`p-2 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              className={`p-2.5 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer min-h-[44px] ${
                 status === 'unchecked'
                   ? 'border-teal-600 bg-teal-50 text-teal-800'
                   : 'border-slate-200 hover:bg-slate-50 text-slate-700'
               }`}
             >
-              <div className="w-4 h-4 rounded-xs border-2 border-slate-400 bg-white" />
+              <div className="w-4 h-4 rounded-xs border-2 border-slate-400 bg-white shrink-0" />
               <span>Belum Lapor</span>
             </button>
 
             <button
               type="button"
               onClick={() => setStatus('problem')}
-              className={`p-2 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              className={`p-2.5 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer min-h-[44px] ${
                 status === 'problem'
                   ? 'border-rose-600 bg-rose-50 text-rose-800'
                   : 'border-slate-200 hover:bg-slate-50 text-slate-700'
               }`}
             >
-              <div className="w-4 h-4 rounded-xs border-2 border-rose-600 bg-rose-500 flex items-center justify-center">
+              <div className="w-4 h-4 rounded-xs border-2 border-rose-600 bg-rose-500 flex items-center justify-center shrink-0">
                 <div className="w-1.5 h-1.5 bg-white rounded-xs" />
               </div>
               <span>Ada Kendala</span>
@@ -112,13 +112,13 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
             <button
               type="button"
               onClick={() => setStatus('leave')}
-              className={`p-2 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              className={`p-2.5 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer min-h-[44px] ${
                 status === 'leave'
                   ? 'border-amber-600 bg-amber-50 text-amber-800'
                   : 'border-slate-200 hover:bg-slate-50 text-slate-700'
               }`}
             >
-              <div className="w-4 h-4 rounded-xs border-2 border-amber-500 bg-amber-100 flex items-center justify-center text-[9px] font-black text-amber-800">
+              <div className="w-4 h-4 rounded-xs border-2 border-amber-500 bg-amber-100 flex items-center justify-center text-[9px] font-black text-amber-800 shrink-0">
                 C
               </div>
               <span>Cuti / Izin</span>
@@ -127,7 +127,7 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
             <button
               type="button"
               onClick={() => setStatus('disabled')}
-              className={`col-span-2 p-2 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer ${
+              className={`col-span-2 p-2.5 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer min-h-[42px] ${
                 status === 'disabled'
                   ? 'border-slate-500 bg-slate-100 text-slate-800'
                   : 'border-slate-200 hover:bg-slate-50 text-slate-600'
@@ -157,14 +157,14 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+            className="px-3.5 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer min-h-[40px]"
           >
             Batal
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs min-h-[40px]"
           >
             Simpan Status
           </button>

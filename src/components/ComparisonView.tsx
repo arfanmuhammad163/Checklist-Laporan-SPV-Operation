@@ -32,32 +32,32 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
   return (
     <div className="w-full bg-white rounded-xl shadow-xs border border-slate-300 overflow-hidden mb-6">
       {/* Subheader */}
-      <div className="bg-amber-600/90 text-white px-4 py-2.5 font-bold flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-amber-700 text-xs sm:text-sm">
+      <div className="bg-amber-600/90 text-white px-3 sm:px-4 py-2 sm:py-2.5 font-bold flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-amber-700 text-xs sm:text-sm">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-200" />
-          <span className="uppercase tracking-wide font-black">
+          <AlertTriangle className="w-4 h-4 text-amber-200 shrink-0" />
+          <span className="uppercase tracking-wide font-black truncate">
             ANALISIS DEVIASI: PLAN HARIAN VS REALISASI LAPORAN
           </span>
         </div>
-        <div className="flex items-center gap-3 text-[11px] font-medium">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium">
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-xs bg-emerald-500 inline-block" /> Sesuai Plan
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-xs bg-emerald-500 inline-block" /> Sesuai Plan
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-xs bg-rose-500 inline-block" /> Belum Lapor (Deviasi)
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-xs bg-rose-500 inline-block" /> Belum Lapor (Deviasi)
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-xs bg-sky-400 inline-block" /> Lapor Non-Plan
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-xs bg-sky-400 inline-block" /> Lapor Non-Plan
           </span>
         </div>
       </div>
 
       {/* Table Container */}
-      <div className="overflow-x-auto select-none">
+      <div className="overflow-x-auto select-none scrollbar-thin">
         <table className="w-full border-collapse text-xs text-slate-800">
           <thead>
             <tr className="bg-slate-100 border-b border-slate-300">
-              <th className="sticky left-0 z-20 bg-slate-100 border-r border-slate-300 px-3 py-2 text-left font-extrabold text-slate-700 min-w-[200px] shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
+              <th className="sticky left-0 z-20 bg-slate-100 border-r border-slate-300 px-2 sm:px-3 py-2 text-left font-extrabold text-slate-700 w-[125px] min-w-[125px] sm:w-[170px] sm:min-w-[170px] md:w-[220px] md:min-w-[220px] shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
                 PIC
               </th>
               {daysArray.map((day) => {
@@ -68,7 +68,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
                   <th
                     key={day}
                     onClick={() => onSelectDay(day)}
-                    className={`border-r border-slate-300 px-1 py-1.5 text-center min-w-[28px] sm:min-w-[32px] cursor-pointer ${
+                    className={`border-r border-slate-300 px-1 py-1.5 text-center min-w-[32px] sm:min-w-[34px] cursor-pointer ${
                       sunday ? 'bg-rose-100 text-rose-700 font-black' : 'bg-slate-50 font-bold'
                     } ${isSelected ? 'ring-2 ring-amber-500 ring-inset bg-amber-50!' : ''}`}
                   >
@@ -76,7 +76,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
                   </th>
                 );
               })}
-              <th className="border-l-2 border-slate-300 bg-slate-100 px-2 py-1.5 text-center font-bold text-slate-700 min-w-[70px]">
+              <th className="border-l-2 border-slate-300 bg-slate-100 px-2 py-1.5 text-center font-bold text-slate-700 min-w-[65px] sm:min-w-[70px]">
                 Deviasi
               </th>
             </tr>
@@ -85,17 +85,18 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
           <tbody className="divide-y divide-slate-200">
             {activePics.map((pic, rowIdx) => {
               let deviationCount = 0;
+              const isEven = rowIdx % 2 === 1;
 
               return (
                 <tr
                   key={pic.id}
                   className={`hover:bg-amber-50/20 transition-colors ${
-                    rowIdx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'
+                    isEven ? 'bg-slate-50/50' : 'bg-white'
                   }`}
                 >
-                  <td className="sticky left-0 z-10 bg-inherit border-r border-slate-300 px-3 py-1.5 text-slate-800 font-semibold truncate shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+                  <td className={`sticky left-0 z-10 ${isEven ? 'bg-slate-50' : 'bg-white'} border-r border-slate-300 px-2 sm:px-3 py-2 text-slate-800 font-semibold truncate shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] w-[125px] min-w-[125px] sm:w-[170px] sm:min-w-[170px] md:w-[220px] md:min-w-[220px]`}>
                     <div className="flex flex-col min-w-0">
-                      <span className="truncate" title={`${pic.name} - ${pic.role || 'SPV Operation'}`}>
+                      <span className="truncate text-xs" title={`${pic.name} - ${pic.role || 'SPV Operation'}`}>
                         {pic.name}
                       </span>
                       <span className="text-[10px] text-slate-400 font-normal leading-tight truncate">

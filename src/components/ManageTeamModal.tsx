@@ -209,12 +209,12 @@ export const ManageTeamModal: React.FC<ManageTeamModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
                       disabled={idx === 0}
                       onClick={() => movePic(idx, 'up')}
-                      className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-20 cursor-pointer rounded hover:bg-slate-100"
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-20 cursor-pointer rounded-lg hover:bg-slate-100"
                       title="Pindah ke atas"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
@@ -223,7 +223,7 @@ export const ManageTeamModal: React.FC<ManageTeamModalProps> = ({
                       type="button"
                       disabled={idx === pics.length - 1}
                       onClick={() => movePic(idx, 'down')}
-                      className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-20 cursor-pointer rounded hover:bg-slate-100"
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-20 cursor-pointer rounded-lg hover:bg-slate-100"
                       title="Pindah ke bawah"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -232,7 +232,7 @@ export const ManageTeamModal: React.FC<ManageTeamModalProps> = ({
                     <button
                       type="button"
                       onClick={() => startEdit(pic)}
-                      className="p-1 text-slate-400 hover:text-teal-600 cursor-pointer rounded hover:bg-teal-50"
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-teal-600 cursor-pointer rounded-lg hover:bg-teal-50"
                       title="Edit nama & jabatan"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -249,7 +249,7 @@ export const ManageTeamModal: React.FC<ManageTeamModalProps> = ({
                           onDeletePic(pic.id);
                         }
                       }}
-                      className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer rounded hover:bg-rose-50"
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 cursor-pointer rounded-lg hover:bg-rose-50"
                       title="Hapus SPV"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
