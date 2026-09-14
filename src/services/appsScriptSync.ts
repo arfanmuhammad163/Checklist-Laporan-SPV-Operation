@@ -5,9 +5,16 @@ export const STORAGE_SHEET_WEB_URL_KEY = 'spv_apps_script_sheet_url';
 export const STORAGE_IS_LOCKED_KEY = 'spv_apps_script_is_locked';
 export const STORAGE_LAST_SYNC_KEY = 'spv_apps_script_last_sync';
 
-// Default Apps Script Web App URL from user screenshot
-export const DEFAULT_APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbx07SSqMaf41yU6jrsmfH2jnN_example/exec';
+// Permanent Apps Script Web App URL provided by user
+export const PERMANENT_APPS_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbzoKEV-rJqCNAyKrLzVf-8Ifox4c_qj3hopVxUBUiPKfqR-MotSXE4cpWqakNQTm2a8/exec';
+
+export const DEFAULT_APPS_SCRIPT_URL = PERMANENT_APPS_SCRIPT_URL;
+
+export const DEFAULT_SHEET_URL =
+  'https://docs.google.com/spreadsheets/d/10lcFgnIRq11PWpefLkiFM9oMqeuLhutoJtRx4G569Z0/edit';
+
+export const DEFAULT_SHEET_NAME = 'Laporan Checklist SPV OPR BSS Parking';
 
 export interface AppsScriptSyncResponse {
   status: 'success' | 'error';
@@ -82,7 +89,7 @@ export async function pingAppsScript(scriptUrl: string): Promise<{
 }
 
 /**
- * Save checklist data to Google Sheets via Apps Script Web App
+ * Save checklist data to Google Sheets via Apps Script Web App (proxied through server to eliminate browser CORS issues)
  */
 export async function saveToAppsScript(
   scriptUrl: string,
@@ -105,9 +112,31 @@ export async function saveToAppsScript(
     savedAt: new Date().toISOString(),
   };
 
+  // 1. Try server proxy first (avoids cross-origin iframe/browser CORS restrictions)
   try {
-    // Note: We use Content-Type text/plain so browser skips CORS preflight on redirects,
-    // Apps Script e.postData.contents parses it as plain text JSON correctly!
+    const proxyRes = await fetch('/api/apps-script/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, payload }),
+    });
+
+    if (proxyRes.ok) {
+      const json = await proxyRes.json();
+      if (json && (json.status === 'success' || json.message)) {
+        return {
+          success: true,
+          message: json.message || 'Laporan berhasil disimpan ke Google Sheets',
+          sheetUrl: json.sheetUrl,
+          timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        };
+      }
+    }
+  } catch (proxyErr) {
+    console.warn('Server proxy save attempt failed, trying direct save fallback:', proxyErr);
+  }
+
+  // 2. Direct fetch fallback
+  try {
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -125,7 +154,6 @@ export async function saveToAppsScript(
     try {
       json = JSON.parse(text);
     } catch {
-      // If response is not direct JSON (e.g. HTML redirect), consider it processed if 200
       return {
         success: true,
         message: 'Laporan berhasil disinkronkan ke Google Sheets',
@@ -152,7 +180,7 @@ export async function saveToAppsScript(
 }
 
 /**
- * Load checklist data from Google Sheets via Apps Script Web App
+ * Load checklist data from Google Sheets via Apps Script Web App (proxied through server to eliminate browser CORS/redirect issues)
  */
 export async function loadFromAppsScript(
   scriptUrl: string
@@ -165,10 +193,28 @@ export async function loadFromAppsScript(
   const url = formatAppsScriptUrl(scriptUrl);
   if (!url) throw new Error('URL Google Apps Script belum diatur');
 
+  // 1. Try server-side proxy first (avoids cross-origin redirect CORS issues in browser iframe)
+  try {
+    const proxyRes = await fetch(`/api/apps-script/load?action=read&url=${encodeURIComponent(url)}&t=${Date.now()}`);
+    if (proxyRes.ok) {
+      const json = await proxyRes.json();
+      if (json && json.status === 'success' && json.data) {
+        return {
+          pics: json.data.pics,
+          data: json.data.monthData,
+          sheetUrl: json.sheetUrl,
+          sheetName: json.sheetName,
+        };
+      }
+    }
+  } catch (proxyErr) {
+    console.warn('Server proxy load attempt failed, trying direct load fallback:', proxyErr);
+  }
+
+  // 2. Direct fetch fallback
   try {
     const res = await fetch(`${url}?action=read&t=${Date.now()}`, {
       method: 'GET',
-      mode: 'cors',
     });
 
     if (!res.ok) {
@@ -187,7 +233,7 @@ export async function loadFromAppsScript(
       throw new Error(json.message || 'Format data dari Google Sheets tidak valid');
     }
   } catch (err: any) {
-    console.error('Load from Apps Script error:', err);
+    console.warn('Load from Apps Script direct fallback warning:', err);
     throw new Error(
       err.message || 'Gagal memuat data dari Apps Script. Pastikan akses Web App publik.'
     );

@@ -20,6 +20,8 @@ import {
   STORAGE_IS_LOCKED_KEY,
   STORAGE_LAST_SYNC_KEY,
   DEFAULT_APPS_SCRIPT_URL,
+  PERMANENT_APPS_SCRIPT_URL,
+  DEFAULT_SHEET_URL,
   APPS_SCRIPT_CODE,
   formatAppsScriptUrl,
 } from '../services/appsScriptSync';
@@ -43,19 +45,21 @@ export const GoogleSheetsSyncBanner: React.FC<GoogleSheetsSyncBannerProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [scriptUrl, setScriptUrl] = useState<string>(() => {
-    return localStorage.getItem(STORAGE_APPS_SCRIPT_URL_KEY) || DEFAULT_APPS_SCRIPT_URL;
+    const saved = localStorage.getItem(STORAGE_APPS_SCRIPT_URL_KEY);
+    if (!saved || saved.includes('_example') || saved.includes('AKfycbx07SSqMaf41yU6')) {
+      localStorage.setItem(STORAGE_APPS_SCRIPT_URL_KEY, PERMANENT_APPS_SCRIPT_URL);
+      return PERMANENT_APPS_SCRIPT_URL;
+    }
+    return saved;
   });
   const [sheetWebUrl, setSheetWebUrl] = useState<string>(() => {
     return (
       activeSpreadsheetUrl ||
       localStorage.getItem(STORAGE_SHEET_WEB_URL_KEY) ||
-      'https://docs.google.com/spreadsheets'
+      DEFAULT_SHEET_URL
     );
   });
-  const [isLocked, setIsLocked] = useState<boolean>(() => {
-    const saved = localStorage.getItem(STORAGE_IS_LOCKED_KEY);
-    return saved !== null ? saved === 'true' : true;
-  });
+  const [isLocked, setIsLocked] = useState<boolean>(true);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [copiedUrl, setCopiedUrl] = useState<boolean>(false);
 
@@ -271,10 +275,27 @@ export const GoogleSheetsSyncBanner: React.FC<GoogleSheetsSyncBannerProps> = ({
                 disabled={isSyncing}
                 onClick={handleTriggerSync}
                 className="flex items-center gap-2 px-4 py-2 bg-[#00875A] hover:bg-[#00704A] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 disabled:opacity-50"
+                title="Simpan & sinkronkan data saat ini ke Google Sheets"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>Sinkron Sekarang</span>
               </button>
+
+              {onPullFromSheet && (
+                <button
+                  type="button"
+                  disabled={isSyncing}
+                  onClick={async () => {
+                    const formatted = formatAppsScriptUrl(scriptUrl);
+                    if (formatted) await onPullFromSheet(formatted);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 cursor-pointer shrink-0 disabled:opacity-50"
+                  title="Tarik data terkini dari Google Sheets (jika ada rekan tim yang baru saja mengisi)"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-emerald-700 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>Tarik Data Cloud</span>
+                </button>
+              )}
 
               <button
                 type="button"

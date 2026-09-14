@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { HeaderBanner } from './components/HeaderBanner';
 import { SummaryCards } from './components/SummaryCards';
 import { ChecklistTable } from './components/ChecklistTable';
@@ -31,6 +31,9 @@ import {
   saveToAppsScript,
   loadFromAppsScript,
   STORAGE_LAST_SYNC_KEY,
+  PERMANENT_APPS_SCRIPT_URL,
+  STORAGE_APPS_SCRIPT_URL_KEY,
+  formatAppsScriptUrl,
 } from './services/appsScriptSync';
 import { User } from 'firebase/auth';
 import {
@@ -193,6 +196,115 @@ export default function App() {
 
   const totalDays = useMemo(() => getDaysInMonth(year, month), [year, month]);
   const monthName = INDONESIAN_MONTHS[month];
+
+  const isInitialLoadedRef = useRef<boolean>(false);
+  const isSavingToSheetsRef = useRef<boolean>(false);
+
+  // Auto-sync on initial page load: anyone who opens this dashboard gets the live spreadsheet data immediately
+  useEffect(() => {
+    let active = true;
+    const autoSyncOnOpen = async () => {
+      try {
+        setIsAppsScriptSyncing(true);
+        const savedUrl =
+          localStorage.getItem(STORAGE_APPS_SCRIPT_URL_KEY) || PERMANENT_APPS_SCRIPT_URL;
+        const validUrl = formatAppsScriptUrl(savedUrl);
+        const result = await loadFromAppsScript(validUrl);
+        if (!active) return;
+        if (result.pics && result.pics.length > 0) {
+          setPics(result.pics);
+        }
+        if (result.data) {
+          setData(result.data);
+        }
+        const nowStr = new Date().toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        setAppsScriptLastSyncTime(nowStr);
+        localStorage.setItem(STORAGE_LAST_SYNC_KEY, nowStr);
+        isInitialLoadedRef.current = true;
+        showToast('success', 'Database Google Sheets tersambung & data mutakhir tersinkronisasi.');
+      } catch (err: any) {
+        console.warn('Auto sync on open warning:', err);
+        isInitialLoadedRef.current = true;
+      } finally {
+        if (active) setIsAppsScriptSyncing(false);
+      }
+    };
+
+    autoSyncOnOpen();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Periodic background check so updates made by teammates automatically reflect on screen
+  useEffect(() => {
+    const handleSyncFromCloud = async () => {
+      if (isSavingToSheetsRef.current || isAppsScriptSyncing || popoverState.isOpen) return;
+      try {
+        const savedUrl =
+          localStorage.getItem(STORAGE_APPS_SCRIPT_URL_KEY) || PERMANENT_APPS_SCRIPT_URL;
+        const validUrl = formatAppsScriptUrl(savedUrl);
+        const result = await loadFromAppsScript(validUrl);
+        if (result.pics && result.pics.length > 0) {
+          setPics(result.pics);
+        }
+        if (result.data) {
+          setData(result.data);
+        }
+        const nowStr = new Date().toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        setAppsScriptLastSyncTime(nowStr);
+        localStorage.setItem(STORAGE_LAST_SYNC_KEY, nowStr);
+      } catch {
+        // silent fail on background poll
+      }
+    };
+
+    const interval = setInterval(handleSyncFromCloud, 30000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleSyncFromCloud();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAppsScriptSyncing, popoverState.isOpen]);
+
+  // Auto-save changes to Google Sheets so teammates see all updates
+  useEffect(() => {
+    if (!isInitialLoadedRef.current) return;
+
+    const timeout = setTimeout(async () => {
+      isSavingToSheetsRef.current = true;
+      try {
+        const savedUrl =
+          localStorage.getItem(STORAGE_APPS_SCRIPT_URL_KEY) || PERMANENT_APPS_SCRIPT_URL;
+        const validUrl = formatAppsScriptUrl(savedUrl);
+        await saveToAppsScript(validUrl, year, month, monthName, pics, data);
+        const nowStr = new Date().toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        setAppsScriptLastSyncTime(nowStr);
+        localStorage.setItem(STORAGE_LAST_SYNC_KEY, nowStr);
+      } catch (e) {
+        console.warn('Auto background save warning:', e);
+      } finally {
+        isSavingToSheetsRef.current = false;
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+  }, [data, pics, year, month, monthName]);
 
   // Auto-save pics to localStorage
   useEffect(() => {
