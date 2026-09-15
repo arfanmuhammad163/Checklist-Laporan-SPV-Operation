@@ -45,12 +45,13 @@ export const GoogleSheetsSyncBanner: React.FC<GoogleSheetsSyncBannerProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [scriptUrl, setScriptUrl] = useState<string>(() => {
-    const saved = localStorage.getItem(STORAGE_APPS_SCRIPT_URL_KEY);
-    if (!saved || saved.includes('_example') || saved.includes('AKfycbx07SSqMaf41yU6')) {
+    // Explicitly apply the permanent Apps Script URL provided by the user
+    try {
       localStorage.setItem(STORAGE_APPS_SCRIPT_URL_KEY, PERMANENT_APPS_SCRIPT_URL);
-      return PERMANENT_APPS_SCRIPT_URL;
+    } catch {
+      // ignore
     }
-    return saved;
+    return PERMANENT_APPS_SCRIPT_URL;
   });
   const [sheetWebUrl, setSheetWebUrl] = useState<string>(() => {
     return (

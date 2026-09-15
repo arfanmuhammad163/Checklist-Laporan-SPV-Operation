@@ -318,6 +318,7 @@ function cellToSheetString(cell) {
   if (cell.status === 'problem') return cell.note ? 'KENDALA: ' + cell.note : 'KENDALA';
   if (cell.status === 'disabled') return cell.note ? 'CUTI: ' + cell.note : 'CUTI/OFF';
   if (cell.status === 'leave') return cell.note ? 'IZIN: ' + cell.note : 'IZIN';
+  if (cell.status === 'sick') return cell.note ? 'SAKIT: ' + cell.note : 'SAKIT';
   return '-';
 }
 
@@ -337,8 +338,12 @@ function sheetStringToCell(val) {
     var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Cuti / Libur';
     return { status: 'disabled', note: note };
   }
-  if (upper.indexOf('IZIN') === 0 || upper.indexOf('SAKIT') === 0) {
-    var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Izin / Sakit';
+  if (upper.indexOf('SAKIT') === 0) {
+    var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Sakit';
+    return { status: 'sick', note: note };
+  }
+  if (upper.indexOf('IZIN') === 0) {
+    var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Izin';
     return { status: 'leave', note: note };
   }
   return { status: 'unchecked' };
