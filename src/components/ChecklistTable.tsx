@@ -195,11 +195,11 @@ export const ChecklistTable: React.FC<ChecklistTableProps> = ({
                             e.preventDefault();
                             onOpenCellMenu(pic.id, day, e);
                           }}
-                          onClick={() => onToggleCell(pic.id, day)}
+                          onClick={(e) => onOpenCellMenu(pic.id, day, e)}
                           className={`border-r border-slate-200 p-0 text-center cursor-pointer transition-colors bg-slate-100/70 hover:bg-slate-200/50 min-w-[32px] h-10 sm:h-9 ${
                             sunday ? 'bg-rose-50/50' : ''
                           } ${isSelected ? 'bg-teal-50/70' : ''}`}
-                          title={note || 'Non-aktif / Cuti (Klik kanan untuk ubah status)'}
+                          title={note || 'Non-aktif / Cuti (Klik untuk ubah status)'}
                         >
                           <div className="h-full w-full flex items-center justify-center">
                             <span className="w-3 h-0.5 bg-slate-300 rounded" />
@@ -211,7 +211,13 @@ export const ChecklistTable: React.FC<ChecklistTableProps> = ({
                     return (
                       <td
                         key={day}
-                        onClick={() => onToggleCell(pic.id, day)}
+                        onClick={(e) => {
+                          if (status === 'sick' || status === 'problem' || status === 'leave') {
+                            onOpenCellMenu(pic.id, day, e);
+                          } else {
+                            onToggleCell(pic.id, day);
+                          }
+                        }}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           onOpenCellMenu(pic.id, day, e);

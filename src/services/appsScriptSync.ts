@@ -47,6 +47,109 @@ export function formatAppsScriptUrl(url: string): string {
 }
 
 /**
+ * Normalizes data received from Google Apps Script.
+ * Ensures 'sick' status is correctly mapped whether the deployed Apps Script returned
+ * a direct 'sick' status or a backward-compatible 'leave' status with 'SAKIT' in the note/value.
+ */
+export function normalizeDataFromAppsScript(data: MonthTableData): MonthTableData {
+  if (!data) return { plan: {}, actual: {} };
+  const normalized: MonthTableData = { plan: {}, actual: {} };
+
+  (['plan', 'actual'] as const).forEach((tableType) => {
+    normalized[tableType] = {};
+    const table = data[tableType] || {};
+    Object.keys(table).forEach((picId) => {
+      normalized[tableType][picId] = {};
+      const picDays = table[picId] || {};
+      Object.keys(picDays).forEach((dayStr) => {
+        const day = Number(dayStr);
+        const cell = picDays[day];
+        if (!cell) {
+          normalized[tableType][picId][day] = { status: 'unchecked' };
+          return;
+        }
+
+        if (cell.status === 'sick') {
+          normalized[tableType][picId][day] = {
+            ...cell,
+            note: cell.note || 'Sakit',
+          };
+          return;
+        }
+
+        // Backward compatibility: if older Apps Script returned 'leave' with SAKIT in note
+        if (cell.status === 'leave' && cell.note) {
+          const noteUpper = cell.note.toUpperCase();
+          if (noteUpper.includes('SAKIT')) {
+            const cleanNote = cell.note
+              .replace(/^IZIN:\s*/i, '')
+              .replace(/^SAKIT:\s*/i, '')
+              .trim();
+            normalized[tableType][picId][day] = {
+              ...cell,
+              status: 'sick',
+              note: cleanNote || 'Sakit',
+            };
+            return;
+          }
+        }
+
+        normalized[tableType][picId][day] = { ...cell };
+      });
+    });
+  });
+
+  return normalized;
+}
+
+/**
+ * Prepares data before sending to Google Apps Script.
+ * For robust compatibility with older deployed Apps Script web apps (which may not yet
+ * have 'sick' in their cellToSheetString branch), any 'sick' cell is encoded with status: 'leave'
+ * and note: 'SAKIT: ...'.
+ * Older Apps Script will write 'IZIN: SAKIT: ...' into the spreadsheet instead of '-' (empty).
+ * Updated Apps Script directly handles 'SAKIT' strings and 'sick' statuses as well.
+ */
+export function prepareDataForAppsScript(data: MonthTableData): MonthTableData {
+  if (!data) return { plan: {}, actual: {} };
+  const prepared: MonthTableData = { plan: {}, actual: {} };
+
+  (['plan', 'actual'] as const).forEach((tableType) => {
+    prepared[tableType] = {};
+    const table = data[tableType] || {};
+    Object.keys(table).forEach((picId) => {
+      prepared[tableType][picId] = {};
+      const picDays = table[picId] || {};
+      Object.keys(picDays).forEach((dayStr) => {
+        const day = Number(dayStr);
+        const cell = picDays[day];
+        if (!cell) {
+          prepared[tableType][picId][day] = { status: 'unchecked' };
+          return;
+        }
+
+        if (cell.status === 'sick') {
+          const noteDesc = cell.note?.trim();
+          const encodedNote = noteDesc && !noteDesc.toUpperCase().startsWith('SAKIT')
+            ? `SAKIT: ${noteDesc}`
+            : (noteDesc || 'SAKIT');
+
+          prepared[tableType][picId][day] = {
+            ...cell,
+            status: 'leave',
+            note: encodedNote,
+          };
+        } else {
+          prepared[tableType][picId][day] = { ...cell };
+        }
+      });
+    });
+  });
+
+  return prepared;
+}
+
+/**
  * Test connectivity to Google Apps Script Web App
  */
 export async function pingAppsScript(scriptUrl: string): Promise<{
@@ -102,13 +205,14 @@ export async function saveToAppsScript(
   const url = formatAppsScriptUrl(scriptUrl);
   if (!url) throw new Error('URL Google Apps Script belum diatur');
 
+  const preparedData = prepareDataForAppsScript(data);
   const payload = {
     action: 'save',
     year,
     month,
     monthName,
     pics,
-    data,
+    data: preparedData,
     savedAt: new Date().toISOString(),
   };
 
@@ -201,7 +305,7 @@ export async function loadFromAppsScript(
       if (json && json.status === 'success' && json.data) {
         return {
           pics: json.data.pics,
-          data: json.data.monthData,
+          data: normalizeDataFromAppsScript(json.data.monthData),
           sheetUrl: json.sheetUrl,
           sheetName: json.sheetName,
         };
@@ -225,7 +329,7 @@ export async function loadFromAppsScript(
     if (json.status === 'success' && json.data) {
       return {
         pics: json.data.pics,
-        data: json.data.monthData,
+        data: normalizeDataFromAppsScript(json.data.monthData),
         sheetUrl: json.sheetUrl,
         sheetName: json.sheetName,
       };
@@ -317,8 +421,13 @@ function cellToSheetString(cell) {
   if (cell.status === 'checked') return 'V';
   if (cell.status === 'problem') return cell.note ? 'KENDALA: ' + cell.note : 'KENDALA';
   if (cell.status === 'disabled') return cell.note ? 'CUTI: ' + cell.note : 'CUTI/OFF';
-  if (cell.status === 'leave') return cell.note ? 'IZIN: ' + cell.note : 'IZIN';
   if (cell.status === 'sick') return cell.note ? 'SAKIT: ' + cell.note : 'SAKIT';
+  if (cell.status === 'leave') {
+    if (cell.note && cell.note.toUpperCase().indexOf('SAKIT') !== -1) {
+      return cell.note.toUpperCase().indexOf('SAKIT') === 0 ? cell.note : 'SAKIT: ' + cell.note;
+    }
+    return cell.note ? 'IZIN: ' + cell.note : 'IZIN';
+  }
   return '-';
 }
 
@@ -338,12 +447,16 @@ function sheetStringToCell(val) {
     var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Cuti / Libur';
     return { status: 'disabled', note: note };
   }
-  if (upper.indexOf('SAKIT') === 0) {
+  if (upper.indexOf('SAKIT') === 0 || upper === 'S' || upper.indexOf('SICK') === 0) {
     var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Sakit';
     return { status: 'sick', note: note };
   }
-  if (upper.indexOf('IZIN') === 0) {
+  if (upper.indexOf('IZIN') === 0 || upper === 'C' || upper.indexOf('LEAVE') === 0) {
     var note = str.indexOf(':') !== -1 ? str.substring(str.indexOf(':') + 1).trim() : 'Izin';
+    if (note.toUpperCase().indexOf('SAKIT') !== -1) {
+      var cleanNote = note.replace(/^IZIN:\s*/i, '').replace(/^SAKIT:\s*/i, '').trim();
+      return { status: 'sick', note: cleanNote || 'Sakit' };
+    }
     return { status: 'leave', note: note };
   }
   return { status: 'unchecked' };
@@ -410,7 +523,12 @@ function saveFullDatabase(ss, payload) {
     pics.forEach(function(p) {
       for (var d = 1; d <= 31; d++) {
         var cell = (data[type] && data[type][p.id]) ? data[type][p.id][d] : null;
-        if (cell && cell.note) {
+        if (cell && (cell.note || cell.status === 'sick' || cell.status === 'problem' || cell.status === 'leave')) {
+          var noteContent = cell.note || (cell.status === 'sick' ? 'Sakit' : (cell.status === 'problem' ? 'Kendala operasional' : 'Cuti / Izin'));
+          var statusLabel = cell.status;
+          if (statusLabel === 'leave' && noteContent.toUpperCase().indexOf('SAKIT') !== -1) {
+            statusLabel = 'sick';
+          }
           notesRows.push([
             nowStr,
             type.toUpperCase(),
@@ -419,8 +537,8 @@ function saveFullDatabase(ss, payload) {
             String(d),
             p.id,
             p.name,
-            cell.status,
-            cell.note
+            statusLabel,
+            noteContent
           ]);
         }
       }

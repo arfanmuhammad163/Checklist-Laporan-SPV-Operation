@@ -274,22 +274,35 @@ export const TodayChecklistModal: React.FC<TodayChecklistModalProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const note = window.prompt(
-                          `Keterangan sakit untuk ${pic.name}:`,
-                          currentCell.note || 'Sakit'
-                        );
-                        if (note !== null) {
-                          onUpdateActualCell(pic.id, selectedDay, isSick ? 'unchecked' : 'sick', note);
+                        if (isSick) {
+                          const note = window.prompt(
+                            `Ubah keterangan sakit untuk ${pic.name} (kosongkan lalu klik OK untuk menghapus status sakit):`,
+                            currentCell.note || 'Sakit'
+                          );
+                          if (note === null) return;
+                          if (note.trim() === '') {
+                            onUpdateActualCell(pic.id, selectedDay, 'unchecked');
+                          } else {
+                            onUpdateActualCell(pic.id, selectedDay, 'sick', note.trim());
+                          }
+                        } else {
+                          const note = window.prompt(
+                            `Keterangan sakit untuk ${pic.name}:`,
+                            currentCell.note || 'Sakit'
+                          );
+                          if (note !== null) {
+                            onUpdateActualCell(pic.id, selectedDay, 'sick', note.trim() || 'Sakit');
+                          }
                         }
                       }}
                       className={`px-2 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors border ${
                         isSick
-                          ? 'bg-purple-100 text-purple-800 border-purple-300'
+                          ? 'bg-purple-100 text-purple-800 border-purple-300 ring-1 ring-purple-400'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-purple-50 hover:text-purple-700'
                       }`}
-                      title="Tandai Sakit"
+                      title={isSick ? `Status Sakit: ${currentCell.note || 'Sakit'} (Klik untuk ubah keterangan)` : 'Tandai Sakit'}
                     >
-                      Sakit
+                      {isSick ? '✓ Sakit' : 'Sakit'}
                     </button>
 
                     <button

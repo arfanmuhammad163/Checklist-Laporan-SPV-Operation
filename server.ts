@@ -11,6 +11,69 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const PERMANENT_APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbzoKEV-rJqCNAyKrLzVf-8Ifox4c_qj3hopVxUBUiPKfqR-MotSXE4cpWqakNQTm2a8/exec';
 
+function normalizeMonthData(monthData: any) {
+  if (!monthData || typeof monthData !== 'object') return monthData;
+  const result: any = { plan: {}, actual: {} };
+  ['plan', 'actual'].forEach((type) => {
+    result[type] = {};
+    const table = monthData[type] || {};
+    Object.keys(table).forEach((picId) => {
+      result[type][picId] = {};
+      const days = table[picId] || {};
+      Object.keys(days).forEach((d) => {
+        const cell = days[d];
+        if (!cell) {
+          result[type][picId][d] = { status: 'unchecked' };
+          return;
+        }
+        if (cell.status === 'sick') {
+          result[type][picId][d] = { ...cell, note: cell.note || 'Sakit' };
+          return;
+        }
+        if (cell.status === 'leave' && cell.note && typeof cell.note === 'string') {
+          if (cell.note.toUpperCase().includes('SAKIT')) {
+            const clean = cell.note.replace(/^IZIN:\s*/i, '').replace(/^SAKIT:\s*/i, '').trim();
+            result[type][picId][d] = { ...cell, status: 'sick', note: clean || 'Sakit' };
+            return;
+          }
+        }
+        result[type][picId][d] = { ...cell };
+      });
+    });
+  });
+  return result;
+}
+
+function prepareMonthData(monthData: any) {
+  if (!monthData || typeof monthData !== 'object') return monthData;
+  const result: any = { plan: {}, actual: {} };
+  ['plan', 'actual'].forEach((type) => {
+    result[type] = {};
+    const table = monthData[type] || {};
+    Object.keys(table).forEach((picId) => {
+      result[type][picId] = {};
+      const days = table[picId] || {};
+      Object.keys(days).forEach((d) => {
+        const cell = days[d];
+        if (!cell) {
+          result[type][picId][d] = { status: 'unchecked' };
+          return;
+        }
+        if (cell.status === 'sick') {
+          const noteText = cell.note?.trim();
+          const encoded = noteText && !noteText.toUpperCase().startsWith('SAKIT')
+            ? `SAKIT: ${noteText}`
+            : (noteText || 'SAKIT');
+          result[type][picId][d] = { ...cell, status: 'leave', note: encoded };
+        } else {
+          result[type][picId][d] = { ...cell };
+        }
+      });
+    });
+  });
+  return result;
+}
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -39,6 +102,9 @@ app.get('/api/apps-script/load', async (req, res) => {
     const text = await response.text();
     try {
       const data = JSON.parse(text);
+      if (data && data.status === 'success' && data.data && data.data.monthData) {
+        data.data.monthData = normalizeMonthData(data.data.monthData);
+      }
       res.json(data);
     } catch {
       res.send(text);
@@ -56,7 +122,16 @@ app.get('/api/apps-script/load', async (req, res) => {
 app.post('/api/apps-script/save', async (req, res) => {
   try {
     const rawUrl = req.body.url || PERMANENT_APPS_SCRIPT_URL;
-    const payload = req.body.payload || req.body;
+    let payload = req.body.payload || req.body;
+
+    if (typeof payload === 'object' && payload !== null) {
+      if (payload.data) {
+        payload = {
+          ...payload,
+          data: prepareMonthData(payload.data),
+        };
+      }
+    }
 
     const response = await fetch(rawUrl, {
       method: 'POST',

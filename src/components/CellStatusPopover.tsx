@@ -39,7 +39,9 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
   if (!isOpen) return null;
 
   const handleSave = () => {
-    onSave(status, note.trim());
+    const trimmedNote = note.trim();
+    const finalNote = status === 'sick' && !trimmedNote ? 'Sakit' : trimmedNote;
+    onSave(status, finalNote);
     onClose();
   };
 
