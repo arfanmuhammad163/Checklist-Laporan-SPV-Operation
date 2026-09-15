@@ -1,5 +1,16 @@
 import React from 'react';
-import { Calendar, Users, FileSpreadsheet, Printer, RotateCcw, Zap, Eye, CheckCircle2 } from 'lucide-react';
+import {
+  Calendar,
+  Users,
+  FileSpreadsheet,
+  Printer,
+  RotateCcw,
+  Zap,
+  Eye,
+  CheckCircle2,
+  LogOut,
+  UserCheck,
+} from 'lucide-react';
 import { INDONESIAN_MONTHS } from '../utils/dateUtils';
 import { ActiveViewTab } from '../types';
 
@@ -21,6 +32,8 @@ interface HeaderBannerProps {
   isSheetsConnected: boolean;
   spreadsheetUrl?: string;
   lastSyncedTime?: string | null;
+  currentUser?: string | null;
+  onLogout?: () => void;
 }
 
 export const HeaderBanner: React.FC<HeaderBannerProps> = ({
@@ -41,6 +54,8 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   isSheetsConnected,
   spreadsheetUrl,
   lastSyncedTime,
+  currentUser,
+  onLogout,
 }) => {
   return (
     <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -108,6 +123,28 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Reset</span>
           </button>
+
+          {/* User Account & Logout */}
+          {currentUser && (
+            <div className="flex items-center gap-1.5 pl-1 sm:pl-2 border-l border-slate-600/60 ml-0.5 shrink-0">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-teal-800/60 border border-teal-400/30 rounded-lg text-xs font-semibold text-teal-100">
+                <UserCheck className="w-3.5 h-3.5 text-teal-300" />
+                <span className="font-mono">{currentUser}</span>
+              </div>
+
+              {onLogout && (
+                <button
+                  id="btn-logout"
+                  onClick={onLogout}
+                  className="flex items-center gap-1 px-2.5 py-2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-bold rounded-lg border border-rose-400/40 shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 min-h-[40px]"
+                  title="Keluar dari portal SPV"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Keluar</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

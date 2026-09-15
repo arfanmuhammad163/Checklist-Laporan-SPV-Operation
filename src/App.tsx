@@ -43,6 +43,7 @@ import {
   MonthTableData,
   PicMember,
 } from './types';
+import { LoginPortal } from './components/LoginPortal';
 import {
   Check,
   AlertTriangle,
@@ -56,8 +57,41 @@ import {
 
 const STORAGE_KEY_PREFIX = 'spv_checklist_data_';
 const STORAGE_PICS_KEY = 'spv_checklist_pics';
+const AUTH_STORAGE_KEY = 'spv_auth_session';
 
 export default function App() {
+  // Authentication State for SPV Portal Login (Strict Session Security)
+  // Uses sessionStorage so closing the tab/window immediately terminates the session
+  const [currentUser, setCurrentUser] = useState<string | null>(() => {
+    try {
+      // Clear any legacy persistent storage for security
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      return sessionStorage.getItem(AUTH_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLoginSuccess = (user: string) => {
+    try {
+      sessionStorage.setItem(AUTH_STORAGE_KEY, user);
+    } catch (e) {
+      console.error('Failed to save session', e);
+    }
+    setCurrentUser(user);
+    showToast('success', `Selamat datang, ${user}!`);
+  };
+
+  const handleLogout = () => {
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) {
+      console.error('Failed to remove session', e);
+    }
+    setCurrentUser(null);
+  };
+
   // Date State: Default to September 2026 (matching the user's reference image)
   const [year, setYear] = useState<number>(2026);
   const [month, setMonth] = useState<number>(8); // September (0-indexed: 8)
@@ -738,6 +772,11 @@ export default function App() {
     }
   };
 
+  // If user is not logged in, show Login Portal
+  if (!currentUser) {
+    return <LoginPortal onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Toast Notification */}
@@ -779,6 +818,8 @@ export default function App() {
         isSheetsConnected={!!user && !!spreadsheet}
         spreadsheetUrl={spreadsheet?.url}
         lastSyncedTime={lastSyncedTime}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
