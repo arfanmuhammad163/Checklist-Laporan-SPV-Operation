@@ -245,6 +245,14 @@ export const ChecklistTable: React.FC<ChecklistTableProps> = ({
                             >
                               C
                             </div>
+                          ) : status === 'sick' ? (
+                            /* Purple Sick Box */
+                            <div
+                              className="w-[20px] h-[20px] sm:w-[19px] sm:h-[19px] rounded-xs border-2 border-purple-500 bg-purple-100 flex items-center justify-center text-purple-800 text-[10px] font-black shadow-2xs hover:scale-110 active:scale-90 transition-transform"
+                              title={note ? `Sakit: ${note}` : 'Sakit'}
+                            >
+                              S
+                            </div>
                           ) : (
                             /* Empty Unchecked Box */
                             <div

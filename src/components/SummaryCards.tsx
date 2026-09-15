@@ -34,8 +34,8 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
     if (actualRec === 'checked') todayReported++;
     if (actualRec === 'problem' || planRec === 'problem') todayProblem++;
 
-    // Unreported if planned but not checked in actual
-    if (planRec === 'checked' && actualRec !== 'checked' && actualRec !== 'disabled') {
+    // Unreported if planned but not checked, disabled, leave, or sick in actual
+    if (planRec === 'checked' && actualRec !== 'checked' && actualRec !== 'disabled' && actualRec !== 'leave' && actualRec !== 'sick') {
       todayUnreported++;
     }
   });

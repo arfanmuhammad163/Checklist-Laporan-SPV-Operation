@@ -164,6 +164,8 @@ export const TodayChecklistModal: React.FC<TodayChecklistModalProps> = ({
               const planCell = planData[pic.id]?.[selectedDay] || { status: 'unchecked' };
               const isChecked = currentCell.status === 'checked';
               const isProblem = currentCell.status === 'problem';
+              const isSick = currentCell.status === 'sick';
+              const isLeave = currentCell.status === 'leave';
               const isPlanned = planCell.status === 'checked';
 
               return (
@@ -174,6 +176,8 @@ export const TodayChecklistModal: React.FC<TodayChecklistModalProps> = ({
                       ? 'bg-emerald-50/40 hover:bg-emerald-50/70'
                       : isProblem
                       ? 'bg-rose-50/40 hover:bg-rose-50/70'
+                      : isSick
+                      ? 'bg-purple-50/40 hover:bg-purple-50/70'
                       : 'hover:bg-slate-50'
                   }`}
                 >
@@ -193,11 +197,17 @@ export const TodayChecklistModal: React.FC<TodayChecklistModalProps> = ({
                           ? 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'
                           : isProblem
                           ? 'border-rose-600 bg-rose-600 text-white'
+                          : isSick
+                          ? 'border-purple-600 bg-purple-600 text-white font-black text-xs'
+                          : isLeave
+                          ? 'border-amber-500 bg-amber-500 text-white font-black text-xs'
                           : 'border-slate-300 bg-white hover:border-teal-600'
                       }`}
                     >
                       {isChecked && <Check className="w-4 h-4 stroke-[3]" />}
                       {isProblem && <AlertCircle className="w-4 h-4" />}
+                      {isSick && 'S'}
+                      {isLeave && 'C'}
                     </button>
 
                     <div>
@@ -226,6 +236,14 @@ export const TodayChecklistModal: React.FC<TodayChecklistModalProps> = ({
                           <span className="text-rose-600 font-medium">
                             ⚠ Ada kendala / catatan
                           </span>
+                        ) : isSick ? (
+                          <span className="text-purple-700 font-medium">
+                            🤒 Sakit
+                          </span>
+                        ) : isLeave ? (
+                          <span className="text-amber-700 font-medium">
+                            🏖 Cuti / Izin
+                          </span>
                         ) : (
                           <span className="text-slate-400">Belum menyerahkan laporan</span>
                         )}
@@ -251,6 +269,27 @@ export const TodayChecklistModal: React.FC<TodayChecklistModalProps> = ({
                       }`}
                     >
                       {isChecked ? 'Sudah Lapor' : 'Tandai Lapor'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const note = window.prompt(
+                          `Keterangan sakit untuk ${pic.name}:`,
+                          currentCell.note || 'Sakit'
+                        );
+                        if (note !== null) {
+                          onUpdateActualCell(pic.id, selectedDay, isSick ? 'unchecked' : 'sick', note);
+                        }
+                      }}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors border ${
+                        isSick
+                          ? 'bg-purple-100 text-purple-800 border-purple-300'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-purple-50 hover:text-purple-700'
+                      }`}
+                      title="Tandai Sakit"
+                    >
+                      Sakit
                     </button>
 
                     <button

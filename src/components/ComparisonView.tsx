@@ -124,6 +124,14 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
                       cellStyle = 'bg-slate-100 text-slate-400';
                       content = <span className="w-2.5 h-0.5 bg-slate-300 rounded" />;
                       tooltip = 'Non-aktif / Cuti';
+                    } else if (actualStatus === 'sick') {
+                      cellStyle = 'bg-purple-100 text-purple-800 font-bold';
+                      content = 'S';
+                      tooltip = 'Sakit';
+                    } else if (actualStatus === 'leave') {
+                      cellStyle = 'bg-amber-100 text-amber-800 font-bold';
+                      content = 'C';
+                      tooltip = 'Cuti / Izin';
                     } else if (isPlanned && isReported) {
                       cellStyle = 'bg-emerald-100/70 text-emerald-800 font-bold';
                       content = '✓';

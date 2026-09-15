@@ -1,4 +1,4 @@
-export type CellStatusType = 'checked' | 'unchecked' | 'problem' | 'leave' | 'disabled';
+export type CellStatusType = 'checked' | 'unchecked' | 'problem' | 'leave' | 'sick' | 'disabled';
 
 export interface CellRecord {
   status: CellStatusType;

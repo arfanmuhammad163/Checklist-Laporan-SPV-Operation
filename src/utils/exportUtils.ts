@@ -38,6 +38,8 @@ export function exportToCSV(
         row.push('"KENDALA"');
       } else if (status === 'leave') {
         row.push('"CUTI"');
+      } else if (status === 'sick') {
+        row.push('"SAKIT"');
       } else if (status === 'disabled') {
         row.push('"OFF"');
       } else {
@@ -66,6 +68,8 @@ export function exportToCSV(
         row.push('"KENDALA"');
       } else if (status === 'leave') {
         row.push('"CUTI"');
+      } else if (status === 'sick') {
+        row.push('"SAKIT"');
       } else if (status === 'disabled') {
         row.push('"OFF"');
       } else {

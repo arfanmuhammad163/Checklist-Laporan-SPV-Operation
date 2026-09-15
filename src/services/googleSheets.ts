@@ -180,6 +180,8 @@ function cellToSheetString(cell?: CellRecord): string {
       return cell.note ? `CUTI: ${cell.note}` : 'CUTI/OFF';
     case 'leave':
       return cell.note ? `IZIN: ${cell.note}` : 'IZIN';
+    case 'sick':
+      return cell.note ? `SAKIT: ${cell.note}` : 'SAKIT';
     case 'unchecked':
     default:
       return '-';
@@ -206,8 +208,13 @@ function sheetStringToCell(val: any): CellRecord {
     return { status: 'disabled', note };
   }
 
-  if (upper.startsWith('IZIN') || upper.startsWith('LEAVE') || upper.startsWith('SAKIT')) {
-    const note = str.includes(':') ? str.split(':').slice(1).join(':').trim() : 'Izin / Sakit';
+  if (upper.startsWith('SAKIT') || upper.startsWith('SICK')) {
+    const note = str.includes(':') ? str.split(':').slice(1).join(':').trim() : 'Sakit';
+    return { status: 'sick', note };
+  }
+
+  if (upper.startsWith('IZIN') || upper.startsWith('LEAVE')) {
+    const note = str.includes(':') ? str.split(':').slice(1).join(':').trim() : 'Izin';
     return { status: 'leave', note };
   }
 

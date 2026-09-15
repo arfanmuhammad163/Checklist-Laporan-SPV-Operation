@@ -126,15 +126,30 @@ export const CellStatusPopover: React.FC<CellStatusPopoverProps> = ({
 
             <button
               type="button"
+              onClick={() => setStatus('sick')}
+              className={`p-2.5 rounded-xl border-2 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer min-h-[44px] ${
+                status === 'sick'
+                  ? 'border-purple-600 bg-purple-50 text-purple-800'
+                  : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+              }`}
+            >
+              <div className="w-4 h-4 rounded-xs border-2 border-purple-500 bg-purple-100 flex items-center justify-center text-[9px] font-black text-purple-800 shrink-0">
+                S
+              </div>
+              <span>Sakit</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setStatus('disabled')}
-              className={`col-span-2 p-2.5 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer min-h-[42px] ${
+              className={`p-2.5 rounded-xl border-2 flex items-center gap-2 text-xs font-semibold transition-all cursor-pointer min-h-[44px] ${
                 status === 'disabled'
                   ? 'border-slate-500 bg-slate-100 text-slate-800'
                   : 'border-slate-200 hover:bg-slate-50 text-slate-600'
               }`}
             >
-              <div className="w-6 h-1 bg-slate-400 rounded" />
-              <span>Non-aktif / Libur Rutin</span>
+              <div className="w-4 h-1 bg-slate-400 rounded shrink-0" />
+              <span className="truncate">Libur / Non-aktif</span>
             </button>
           </div>
 

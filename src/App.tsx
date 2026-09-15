@@ -974,6 +974,13 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded-xs border-2 border-purple-500 bg-purple-100 flex items-center justify-center text-[9px] font-black text-purple-800">
+                S
+              </div>
+              <span className="text-slate-600">Sakit</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
               <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-black">
                 Tgl Merah
               </span>
